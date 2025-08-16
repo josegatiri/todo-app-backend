@@ -29,12 +29,10 @@ class Task(models.Model):
     """Task status"""
     priority = models.CharField(max_length=1, choices=PRIORITY, default="M")
     """Priority of the task"""
-    due_date = models.DateTimeField(null=True, blank=True)
+    due_date = models.DateTimeField(null=True)
     """Deadline of the task"""
     completed_at = models.DateTimeField(null=True, blank=True)
     """Time of completion of the task"""
-    is_archived = models.BooleanField(default=False)
-    """Checking whether the task time of completion was attained"""
     created_at = models.DateTimeField(auto_now_add=True)
     """Date of creation of the task"""
     updated_at = models.DateTimeField(auto_now=True)
@@ -46,6 +44,17 @@ class Task(models.Model):
             models.Index(fields=["owner", "due_date"]),
         ]
         ordering = ["-created_at"]
+    
+    @property
+    def is_archived(self) -> bool:
+        """Checking whether the task time of completion was attained"""
+        # We check if the fields completed at and due_date are emptly
+        if self.completed_at is not None and self.due_date is not None:
+            # if the value of complete time is earlier than the start date we return true
+            if self.completed_at < self.due_date:
+                return True
+        # if not we return false
+        return False
 
     def save(self, *args, **kwargs):
         if self.status == "C" and self.completed_at is None:
